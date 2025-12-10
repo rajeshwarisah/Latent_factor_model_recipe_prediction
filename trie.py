@@ -21,11 +21,21 @@ Space Complexity: O(ALPHABET_SIZE * m * n) where n is number of words
 class TrieNode:
     """Node in a Trie data structure."""
 
-    def __init__(self):
-        """Initialize a Trie node."""
+    def __init__(self, char: str = ''):
+        """
+        Initialize a Trie node.
+
+        Args:
+            char: Character this node represents (optional, for debugging/visualization)
+        """
+        self.char = char  # Character this node represents (useful for debugging)
         self.children = {}  # Dictionary to store child nodes
         self.is_end_of_word = False  # Flag to mark end of a word
         self.word_count = 0  # Count of words ending at this node
+
+    def __repr__(self):
+        """String representation for debugging."""
+        return f"TrieNode('{self.char}', end={self.is_end_of_word}, children={len(self.children)})"
 
 
 class Trie:
@@ -54,7 +64,7 @@ class Trie:
         for char in word:
             # If character doesn't exist, create new node
             if char not in node.children:
-                node.children[char] = TrieNode()
+                node.children[char] = TrieNode(char)  # Store char in node
             node = node.children[char]
 
         # Mark the end of word
@@ -276,6 +286,42 @@ class Trie:
         for char, child_node in node.children.items():
             self._collect_words(child_node, prefix + char, words)
 
+    def visualize(self, max_depth: int = 5) -> None:
+        """
+        Visualize the Trie structure (demonstrates usefulness of storing char in node).
+
+        Args:
+            max_depth: Maximum depth to display
+
+        Example:
+            >>> trie = Trie()
+            >>> trie.insert("app")
+            >>> trie.insert("apple")
+            >>> trie.visualize()
+        """
+        print("Trie Structure:")
+        print("root")
+        self._visualize_helper(self.root, "", 0, max_depth)
+
+    def _visualize_helper(self, node: TrieNode, prefix: str, depth: int, max_depth: int) -> None:
+        """Helper method for visualization."""
+        if depth >= max_depth:
+            return
+
+        items = sorted(node.children.items())
+        for i, (char, child_node) in enumerate(items):
+            is_last = (i == len(items) - 1)
+            connector = "└── " if is_last else "├── "
+            extension = "    " if is_last else "│   "
+
+            # Using stored char for debugging/display
+            display = f"{child_node.char}"
+            if child_node.is_end_of_word:
+                display += " (*)"
+
+            print(f"{prefix}{connector}{display}")
+            self._visualize_helper(child_node, prefix + extension, depth + 1, max_depth)
+
     def __len__(self) -> int:
         """Return the number of words in the Trie."""
         return self.total_words
@@ -406,3 +452,18 @@ if __name__ == "__main__":
         elif op == "startsWith":
             result = trie.startsWith(word)
             print(f"  trie.startsWith('{word}') -> {result}")
+
+    # Visualization demo (shows why storing char in node is useful)
+    print("\n" + "="*60)
+    print("=== Visualization Demo (using stored char) ===\n")
+
+    trie_viz = Trie()
+    words_viz = ["app", "apple", "apply", "cat", "car"]
+    print(f"Inserting words: {words_viz}\n")
+    for word in words_viz:
+        trie_viz.insert(word)
+
+    trie_viz.visualize()
+
+    print("\nNote: The (*) marks indicate end of a word.")
+    print("The char field in each TrieNode makes this visualization possible!")
